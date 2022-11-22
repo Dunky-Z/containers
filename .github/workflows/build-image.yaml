@@ -62,34 +62,37 @@ jobs:
             IMG=$(tr '[:upper:]' '[:lower:]' <<< "${REGISTRY}/${REPOSITORY}/${IMAGE_NAME}-${sub}")
             echo "Building Image: ${IMG}:${short_sha}..."
             docker build --target "${sub}" --tag "${IMG}:${short_sha}" -f Dockerfile .
+            IMG=$(tr '[:upper:]' '[:lower:]' <<< "${REGISTRY}/${REPOSITORY}/${IMAGE_NAME}-${sub}:${short_sha}")
+            echo ">>>>>>>>>>>>>>>>>>>>>>>> ${IMG}"
+            docker inspect -f {{".Size"}} ${IMG}
           done
         shell: bash
 
-      - name: Check (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          # Only check the last sub-image in the list (for now)
-          sub=${SUB_IMAGES##* }
-          IMG=$(tr '[:upper:]' '[:lower:]' <<< "${REGISTRY}/${REPOSITORY}/${IMAGE_NAME}-${sub}:${short_sha}")
-          echo "Launching ${IMG}..."
-          docker run \
-            --rm \
-            --volume "${PWD}":/work \
-            --workdir /work \
-            "${IMG}" \
-            "./.github/workflows/test_build_edk2.sh"
-        shell: bash
+      # - name: Check (Linux)
+      #   if: runner.os == 'Linux'
+      #   run: |
+      #     # Only check the last sub-image in the list (for now)
+      #     sub=${SUB_IMAGES##* }
+      #     IMG=$(tr '[:upper:]' '[:lower:]' <<< "${REGISTRY}/${REPOSITORY}/${IMAGE_NAME}-${sub}:${short_sha}")
+      #     echo "Launching ${IMG}..."
+      #     docker run \
+      #       --rm \
+      #       --volume "${PWD}":/work \
+      #       --workdir /work \
+      #       "${IMG}" \
+      #       "./.github/workflows/test_build_edk2.sh"
+      #   shell: bash
 
-      - name: Push
-        if: ${{ github.ref == 'refs/heads/main' }}
-        run: |
-          for sub in $SUB_IMAGES; do
-            IMG=$(tr '[:upper:]' '[:lower:]' <<< "${REGISTRY}/${REPOSITORY}/${IMAGE_NAME}-${sub}")
-            echo "Pushing Image: ${IMG}:${short_sha}..."
-            docker tag "${IMG}:${short_sha}" "${IMG}:latest"
-            docker push "${IMG}:${short_sha}"
-            docker push "${IMG}:latest"
-          done
-        shell: bash
+      # - name: Push
+      #   if: ${{ github.ref == 'refs/heads/main' }}
+      #   run: |
+      #     for sub in $SUB_IMAGES; do
+      #       IMG=$(tr '[:upper:]' '[:lower:]' <<< "${REGISTRY}/${REPOSITORY}/${IMAGE_NAME}-${sub}")
+      #       echo "Pushing Image: ${IMG}:${short_sha}..."
+      #       docker tag "${IMG}:${short_sha}" "${IMG}:latest"
+      #       docker push "${IMG}:${short_sha}"
+      #       docker push "${IMG}:latest"
+      #     done
+      #   shell: bash
 
 
